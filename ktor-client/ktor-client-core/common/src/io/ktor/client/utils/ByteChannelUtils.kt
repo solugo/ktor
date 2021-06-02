@@ -19,15 +19,24 @@ internal fun ByteReadChannel.observable(
         val total = contentLength ?: -1
         var bytesSend = 0L
         while (!this@observable.isClosedForRead) {
+            println("starting read")
             val read = this@observable.readAvailable(byteArray)
+            println("starting write")
             channel.writeFully(byteArray, offset = 0, length = read)
+            println("read and write succeed $read")
+            if (read == -1) {
+                println("read is -1, isClosedForRead is ${this@observable.isClosedForRead}")
+                continue
+            }
             bytesSend += read
             listener(bytesSend, total)
         }
+        println("finished writer")
         val closedCause = this@observable.closedCause
         channel.close(closedCause)
         if (closedCause == null && bytesSend == 0L) {
             listener(bytesSend, total)
         }
+        println("exiting writer")
     }
 }.channel

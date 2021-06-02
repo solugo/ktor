@@ -259,4 +259,31 @@ class BodyProgressTest : ClientLoader() {
             assertTrue(invokedCount > 2)
         }
     }
+
+    @Ignore
+    @Test
+    fun testReceiveInfiniteStreamAndCancel() = clientTests {
+        test { client ->
+            invokedCount = 10
+            val listener: ProgressListener = { _, _ -> invokedCount++ }
+
+            val statement = client.get<HttpStatement>("$TEST_SERVER/content/stream") {
+//                onDownload(listener)
+            }
+            statement.execute { response ->
+                println("BEFORE RECEIVE")
+                val channel = response.receive<ByteReadChannel>()
+                val array = ByteArray(1024)
+                repeat(5) {
+                    channel.readAvailable(array)
+                }
+                channel.cancel()
+                println("EXECUTE END")
+            }
+            println("AFTER EXECUTE ")
+
+            assertTrue(invokedCount > 2)
+            println("AFTER ASSERT ")
+        }
+    }
 }
